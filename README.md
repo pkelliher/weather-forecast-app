@@ -8,17 +8,20 @@ A Next.js application that displays a 5-day weather forecast in 3-hour increment
 
 ## Features
 
-- Server-side rendered pages
-- 5-day forecast in 3-hour increments
+- Server-side rendered pages for fast loading
+- 5-day forecast displayed in 3-hour increments
 - Dynamic routing: `/weather/[zip]`
-- Responsive design
-- TypeScript
+- Client-side ZIP validation with inline error messages
+- Improved navigation using Next.js `<Link>` for internal pages
+- Responsive design for desktop and mobile
+- Built with TypeScript for type safety
 
 ## Tech Stack
 
-- Next.js 14 (App Router)
+- Next.js 16 (App Router)
+- React 19
 - TypeScript
-- Tailwind CSS
+- Tailwind CSS 4
 - OpenWeather API
 
 ## Getting Started
@@ -53,11 +56,24 @@ A Next.js application that displays a 5-day weather forecast in 3-hour increment
 
 5. Open [http://localhost:3000](http://localhost:3000)
 
+### Running in Production
+
+1. Build the app:
+   ```bash
+   npm run build
+   ```
+  
+2. Start the server:
+   ```bash
+   npm start
+   ```
+
 ## Usage
 
 Visit `/weather/[zip]` to see the forecast for any US ZIP code.
 
 Example: `/weather/94102` (San Francisco)
+> **Note:** Enter a 5-digit US ZIP code. If the input is less than 5 digits, you will see inline validation feedback. Invalid ZIP codes return a 404 page.
 
 ## API Reference
 
