@@ -194,9 +194,9 @@ async function getForecast(zip: string, apiKey?: string): Promise<ForecastResult
 export default async function WeatherPage({
   params,
 }: {
-  params: { zip: string };
+  params: Promise<{ zip: string }>;
 }) {
-  const { zip } = params;
+  const { zip } = await params;
 
   if (!/^\d{5}$/.test(zip)) {
     notFound();
