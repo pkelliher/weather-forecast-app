@@ -111,7 +111,7 @@ Example: `/weather/94102` (San Francisco)
 
 - [OpenWeather Geocoding API](https://openweathermap.org/api/geocoding-api)
 - [OpenWeather 5-Day Forecast](https://openweathermap.org/forecast5)
-- [Zippopotam.us ZIP → Coordinates API](https://www.zippopotam.us/)
+- [Zippopotam.us ZIP → Coordinates API](https://api.zippopotam.us/)
 - [Open-Meteo 5-Day Forecast API](https://open-meteo.com/)
 
 ## License
