@@ -234,7 +234,7 @@ export default async function WeatherPage({
             )}
 
             <p className="text-sm text-gray-500 mt-2">
-              5-Day Forecast (3-hour intervals)
+              🌤 Your 5-Day Weather Forecast 🌦 (3-hour intervals)
             </p>
           </div>
 
