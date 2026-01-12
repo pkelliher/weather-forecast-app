@@ -1,6 +1,8 @@
 # 5-Day Weather Forecast App
 
-A Next.js application that displays a 5-day weather forecast in 3-hour increments for any US ZIP code.
+A Next.js application that displays a 5-day weather forecast in 3-hour increments for any US ZIP code.  
+
+This app now supports multiple weather APIs, user-friendly error pages, and improved UI thanks to Builder.io integration.
 
 ## Live Demo
 
@@ -15,6 +17,10 @@ A Next.js application that displays a 5-day weather forecast in 3-hour increment
 - Improved navigation using Next.js `<Link>` for internal pages
 - Responsive design for desktop and mobile
 - Built with TypeScript for type safety
+- **Fallback Weather API**: Works even without an OpenWeather API key using free APIs (zippopotam.us + Open-Meteo)
+- **Global Error Handling**: Displays a friendly error page for runtime errors
+- **Custom 404 Page**: User-friendly page for invalid routes
+- Updated header and UI enhancements for a more engaging experience
 
 ## Tech Stack
 
@@ -22,14 +28,14 @@ A Next.js application that displays a 5-day weather forecast in 3-hour increment
 - React 19
 - TypeScript
 - Tailwind CSS 4
-- OpenWeather API
+- OpenWeather API (optional, fallback to free APIs if missing)
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 18+ 
-- OpenWeather API key ([Get one here](https://openweathermap.org/api))
+- OpenWeather API key (optional, app works without it) ([Get one here](https://openweathermap.org/api))
 
 ### Installation
 
@@ -44,7 +50,7 @@ A Next.js application that displays a 5-day weather forecast in 3-hour increment
    npm install
    ```
 
-3. Create `.env.local` and add your API key:
+3. Create `.env.local` and add your API key (optional):
    ```
    NEXT_PUBLIC_OPENWEATHER_API_KEY=your_api_key_here
    ```
@@ -98,13 +104,15 @@ PASS  __tests__/Home.test.tsx
 Visit `/weather/[zip]` to see the forecast for any US ZIP code.
 
 Example: `/weather/94102` (San Francisco)
-> **Note:** Enter a 5-digit US ZIP code. ZIP codes shorter than 5 digits show inline validation feedback. Valid-format but unknown ZIP codes render a friendly error state (404).
-
+> **Note**: Enter a 5-digit US ZIP code. ZIP codes shorter than 5 digits show inline validation feedback. Valid-format but unknown ZIP codes render a friendly error state (404).
+**Fallback Behavior**: If no OpenWeather API key is provided, the app automatically uses free APIs (Open-Meteo) to display the forecast. An indicator will show when fallback data is being used.
 
 ## API Reference
 
 - [OpenWeather Geocoding API](https://openweathermap.org/api/geocoding-api)
 - [OpenWeather 5-Day Forecast](https://openweathermap.org/forecast5)
+- [Zippopotam.us ZIP → Coordinates API](https://www.zippopotam.us/)
+- [Open-Meteo 5-Day Forecast API](https://open-meteo.com/)
 
 ## License
 
