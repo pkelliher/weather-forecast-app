@@ -68,6 +68,31 @@ A Next.js application that displays a 5-day weather forecast in 3-hour increment
    npm start
    ```
 
+### Running Tests
+
+This project uses Jest and React Testing Library for unit and component tests.
+
+To run all tests once:
+
+```bash
+npm test
+```
+
+To run tests in watch mode (reruns tests on file changes):
+```bash
+npm run test:watch
+```
+
+You should see output like:
+```
+PASS  __tests__/InvalidZipState.test.tsx
+PASS  __tests__/Home.test.tsx
+```
+
+## Test Files
+- `__tests__/Home.test.tsx` – Tests the home page ZIP input form.
+- `__tests__/InvalidZipState.test.tsx` – Tests the invalid ZIP error state component.
+
 ## Usage
 
 Visit `/weather/[zip]` to see the forecast for any US ZIP code.
