@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
+import InvalidZipState from "../invalid-zip-state";
+
 interface WeatherData {
   list: Array<{
     dt: number;
@@ -46,19 +48,19 @@ export default async function WeatherPage({
   }
 
   try {
-    // Step 1: Convert ZIP to coordinates
+    // Convert ZIP to coordinates
     const geoResponse = await fetch(
       `https://api.openweathermap.org/geo/1.0/zip?zip=${zip},US&appid=${API_KEY}`,
       { next: { revalidate: 3600 } } // Cache for 1 hour
     );
 
     if (!geoResponse.ok) {
-      throw new Error("Invalid ZIP code");
+      return <InvalidZipState zip={zip} />;
     }
 
     const { lat, lon, name } = await geoResponse.json();
 
-    // Step 2: Get 5-day forecast
+    // Get 5-day forecast
     const forecastResponse = await fetch(
       `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${API_KEY}`,
       { next: { revalidate: 600 } } // Cache for 10 minutes
