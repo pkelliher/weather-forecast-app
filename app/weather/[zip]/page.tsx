@@ -53,7 +53,7 @@ export default async function WeatherPage({
     );
 
     if (!geoResponse.ok) {
-      notFound();
+      throw new Error("Invalid ZIP code");
     }
 
     const { lat, lon, name } = await geoResponse.json();
