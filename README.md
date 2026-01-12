@@ -73,7 +73,8 @@ A Next.js application that displays a 5-day weather forecast in 3-hour increment
 Visit `/weather/[zip]` to see the forecast for any US ZIP code.
 
 Example: `/weather/94102` (San Francisco)
-> **Note:** Enter a 5-digit US ZIP code. If the input is less than 5 digits, you will see inline validation feedback. Invalid ZIP codes return a 404 page.
+> **Note:** Enter a 5-digit US ZIP code. ZIP codes shorter than 5 digits show inline validation feedback. Valid-format but unknown ZIP codes render a friendly error state (404).
+
 
 ## API Reference
 

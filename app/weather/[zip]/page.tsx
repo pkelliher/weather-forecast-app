@@ -32,7 +32,6 @@ export default async function WeatherPage({
 }) {
   const { zip } = await params;
 
-  // Validate ZIP code
   if (!/^\d{5}$/.test(zip)) {
     notFound();
   }
@@ -48,10 +47,9 @@ export default async function WeatherPage({
   }
 
   try {
-    // Convert ZIP to coordinates
     const geoResponse = await fetch(
       `https://api.openweathermap.org/geo/1.0/zip?zip=${zip},US&appid=${API_KEY}`,
-      { next: { revalidate: 3600 } } // Cache for 1 hour
+      { next: { revalidate: 3600 } }
     );
 
     if (!geoResponse.ok) {
@@ -60,10 +58,9 @@ export default async function WeatherPage({
 
     const { lat, lon, name } = await geoResponse.json();
 
-    // Get 5-day forecast
     const forecastResponse = await fetch(
       `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${API_KEY}`,
-      { next: { revalidate: 600 } } // Cache for 10 minutes
+      { next: { revalidate: 600 } }
     );
 
     if (!forecastResponse.ok) {
@@ -75,7 +72,6 @@ export default async function WeatherPage({
     return (
       <main className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4">
-          {/* Header */}
           <div className="mb-8">
             <Link
               href="/"
@@ -90,7 +86,6 @@ export default async function WeatherPage({
             </p>
           </div>
 
-          {/* Forecast Grid */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {forecastData.list.map((item) => (
               <div
