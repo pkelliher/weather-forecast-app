@@ -1,11 +1,5 @@
 import { render, screen } from "@testing-library/react";
 import InvalidZipState from "../app/weather/invalid-zip-state";
-import userEvent from "@testing-library/user-event";
-import { useRouter } from "next/navigation";
-
-jest.mock("next/navigation", () => ({
-  useRouter: jest.fn(() => ({ push: jest.fn() })),
-}));
 
 describe("InvalidZipState", () => {
   it("renders error message with zip code", () => {
