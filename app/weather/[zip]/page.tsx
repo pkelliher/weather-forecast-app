@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 interface WeatherData {
   list: Array<{
@@ -47,7 +48,7 @@ export default async function WeatherPage({
   try {
     // Step 1: Convert ZIP to coordinates
     const geoResponse = await fetch(
-      `http://api.openweathermap.org/geo/1.0/zip?zip=${zip},US&appid=${API_KEY}`,
+      `https://api.openweathermap.org/geo/1.0/zip?zip=${zip},US&appid=${API_KEY}`,
       { next: { revalidate: 3600 } } // Cache for 1 hour
     );
 
@@ -74,12 +75,12 @@ export default async function WeatherPage({
         <div className="max-w-7xl mx-auto px-4">
           {/* Header */}
           <div className="mb-8">
-            <a
+            <Link
               href="/"
               className="text-blue-500 hover:underline inline-flex items-center gap-2"
             >
               ← Back to search
-            </a>
+            </Link>
             <h1 className="text-4xl font-bold mt-4 text-gray-800">{name}</h1>
             <p className="text-gray-600">ZIP Code: {zip}</p>
             <p className="text-sm text-gray-500 mt-2">
