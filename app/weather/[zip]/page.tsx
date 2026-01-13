@@ -31,7 +31,10 @@ type ForecastResult = {
   dataSource: "openweather" | "open-meteo";
 };
 
-function mapOpenMeteoWeatherCode(code: number): { main: string; description: string } {
+function mapOpenMeteoWeatherCode(code: number): {
+  main: string;
+  description: string;
+} {
   // https://open-meteo.com/en/docs#api_form
   if (code === 0) return { main: "Clear", description: "clear sky" };
   if (code === 1) return { main: "Clouds", description: "mainly clear" };
@@ -43,8 +46,10 @@ function mapOpenMeteoWeatherCode(code: number): { main: string; description: str
   if (code === 51) return { main: "Drizzle", description: "light drizzle" };
   if (code === 53) return { main: "Drizzle", description: "moderate drizzle" };
   if (code === 55) return { main: "Drizzle", description: "dense drizzle" };
-  if (code === 56) return { main: "Drizzle", description: "light freezing drizzle" };
-  if (code === 57) return { main: "Drizzle", description: "dense freezing drizzle" };
+  if (code === 56)
+    return { main: "Drizzle", description: "light freezing drizzle" };
+  if (code === 57)
+    return { main: "Drizzle", description: "dense freezing drizzle" };
 
   if (code === 61) return { main: "Rain", description: "slight rain" };
   if (code === 63) return { main: "Rain", description: "moderate rain" };
@@ -58,7 +63,8 @@ function mapOpenMeteoWeatherCode(code: number): { main: string; description: str
   if (code === 77) return { main: "Snow", description: "snow grains" };
 
   if (code === 80) return { main: "Rain", description: "slight rain showers" };
-  if (code === 81) return { main: "Rain", description: "moderate rain showers" };
+  if (code === 81)
+    return { main: "Rain", description: "moderate rain showers" };
   if (code === 82) return { main: "Rain", description: "violent rain showers" };
 
   if (code === 85) return { main: "Snow", description: "slight snow showers" };
@@ -66,14 +72,23 @@ function mapOpenMeteoWeatherCode(code: number): { main: string; description: str
 
   if (code === 95) return { main: "Thunderstorm", description: "thunderstorm" };
   if (code === 96)
-    return { main: "Thunderstorm", description: "thunderstorm with slight hail" };
+    return {
+      main: "Thunderstorm",
+      description: "thunderstorm with slight hail",
+    };
   if (code === 99)
-    return { main: "Thunderstorm", description: "thunderstorm with heavy hail" };
+    return {
+      main: "Thunderstorm",
+      description: "thunderstorm with heavy hail",
+    };
 
   return { main: "Unknown", description: "unknown conditions" };
 }
 
-async function getForecast(zip: string, apiKey?: string): Promise<ForecastResult | null> {
+async function getForecast(
+  zip: string,
+  apiKey?: string
+): Promise<ForecastResult | null> {
   if (apiKey) {
     const geoResponse = await fetch(
       `https://api.openweathermap.org/geo/1.0/zip?zip=${zip},US&appid=${apiKey}`,
@@ -161,11 +176,7 @@ async function getForecast(zip: string, apiKey?: string): Promise<ForecastResult
   const list: WeatherData["list"] = [];
 
   // 5 days * (24 / 3) = 40 items
-  for (
-    let i = firstFutureIndex;
-    i < times.length && list.length < 40;
-    i += 3
-  ) {
+  for (let i = firstFutureIndex; i < times.length && list.length < 40; i += 3) {
     const dt = new Date(times[i]);
     const condition = mapOpenMeteoWeatherCode(meteoData.hourly.weather_code[i]);
 
@@ -204,80 +215,85 @@ export default async function WeatherPage({
 
   const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
 
+  let forecast: ForecastResult | null = null;
+
   try {
-    const forecast = await getForecast(zip, API_KEY);
-
-    if (!forecast) {
-      return <InvalidZipState zip={zip} />;
-    }
-
-    return (
-      <main className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="mb-8">
-            <Link
-              href="/"
-              className="text-blue-500 hover:underline inline-flex items-center gap-2"
-            >
-              ← Back to search
-            </Link>
-            <h1 className="text-4xl font-bold mt-4 text-gray-800">
-              {forecast.cityName}
-            </h1>
-            <p className="text-gray-600">ZIP Code: {zip}</p>
-
-            {forecast.dataSource === "open-meteo" && (
-              <p className="text-sm text-gray-500 mt-2">
-                Showing forecast using a free data source. To use OpenWeather,
-                set NEXT_PUBLIC_OPENWEATHER_API_KEY.
-              </p>
-            )}
-
-            <p className="text-sm text-gray-500 mt-2">
-              🌤 Your 5-Day Weather Forecast 🌦 (3-hour intervals)
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {forecast.list.map((item) => (
-              <div
-                key={item.dt}
-                className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow"
-              >
-                <p className="font-semibold text-lg text-gray-800">
-                  {new Date(item.dt * 1000).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                  })}
-                </p>
-                <p className="text-sm text-gray-600 mb-3">
-                  {new Date(item.dt * 1000).toLocaleTimeString("en-US", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </p>
-
-                <p className="text-4xl font-bold my-2 text-blue-600">
-                  {Math.round(item.main.temp)}°F
-                </p>
-
-                <p className="text-gray-700 capitalize font-medium">
-                  {item.weather[0].description}
-                </p>
-
-                <div className="mt-4 pt-4 border-t border-gray-200 space-y-1 text-sm text-gray-600">
-                  <p>Feels like: {Math.round(item.main.feels_like)}°F</p>
-                  <p>Humidity: {item.main.humidity}%</p>
-                  <p>Wind: {Math.round(item.wind.speed)} mph</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </main>
-    );
+    forecast = await getForecast(zip, API_KEY);
   } catch {
     notFound();
   }
+
+  if (!forecast) {
+    return <InvalidZipState zip={zip} />;
+  }
+
+  return (
+    <main className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="mb-8">
+          <Link
+            href="/"
+            className="text-blue-500 hover:underline inline-flex items-center gap-2"
+          >
+            ← Back to search
+          </Link>
+
+          <h1 className="text-4xl font-bold mt-4 text-gray-800">
+            {forecast.cityName}
+          </h1>
+
+          <p className="text-gray-600">ZIP Code: {zip}</p>
+
+          {forecast.dataSource === "open-meteo" && (
+            <p className="text-sm text-gray-500 mt-2">
+              Showing forecast using a free data source. To use OpenWeather, set
+              NEXT_PUBLIC_OPENWEATHER_API_KEY.
+            </p>
+          )}
+
+          <p className="text-sm text-gray-500 mt-2">
+            🌤 Your 5-Day Weather Forecast 🌦 (3-hour intervals)
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {forecast.list.map((item) => (
+            <div
+              key={item.dt}
+              className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow"
+            >
+              <p className="font-semibold text-lg text-gray-800">
+                {new Date(item.dt * 1000).toLocaleDateString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </p>
+
+              <p className="text-sm text-gray-600 mb-3">
+                {new Date(item.dt * 1000).toLocaleTimeString("en-US", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </p>
+
+              <p className="text-4xl font-bold my-2 text-blue-600">
+                {Math.round(item.main.temp)}°F
+              </p>
+
+              <p className="text-gray-700 capitalize font-medium">
+                {item.weather[0].description}
+              </p>
+
+              <div className="mt-4 pt-4 border-t border-gray-200 space-y-1 text-sm text-gray-600">
+                <p>Feels like: {Math.round(item.main.feels_like)}°F</p>
+                <p>Humidity: {item.main.humidity}%</p>
+                <p>Wind: {Math.round(item.wind.speed)} mph</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
 }
