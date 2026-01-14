@@ -31,18 +31,18 @@ type ForecastResult = {
   dataSource: "openweather" | "open-meteo";
 };
 
+// -------------------
+// Map Open-Meteo weather codes
+// -------------------
 function mapOpenMeteoWeatherCode(code: number): {
   main: string;
   description: string;
 } {
-  // https://open-meteo.com/en/docs#api_form
   if (code === 0) return { main: "Clear", description: "clear sky" };
   if (code === 1) return { main: "Clouds", description: "mainly clear" };
   if (code === 2) return { main: "Clouds", description: "partly cloudy" };
   if (code === 3) return { main: "Clouds", description: "overcast" };
-
   if (code === 45 || code === 48) return { main: "Fog", description: "fog" };
-
   if (code === 51) return { main: "Drizzle", description: "light drizzle" };
   if (code === 53) return { main: "Drizzle", description: "moderate drizzle" };
   if (code === 55) return { main: "Drizzle", description: "dense drizzle" };
@@ -50,26 +50,21 @@ function mapOpenMeteoWeatherCode(code: number): {
     return { main: "Drizzle", description: "light freezing drizzle" };
   if (code === 57)
     return { main: "Drizzle", description: "dense freezing drizzle" };
-
   if (code === 61) return { main: "Rain", description: "slight rain" };
   if (code === 63) return { main: "Rain", description: "moderate rain" };
   if (code === 65) return { main: "Rain", description: "heavy rain" };
   if (code === 66) return { main: "Rain", description: "light freezing rain" };
   if (code === 67) return { main: "Rain", description: "heavy freezing rain" };
-
   if (code === 71) return { main: "Snow", description: "slight snow" };
   if (code === 73) return { main: "Snow", description: "moderate snow" };
   if (code === 75) return { main: "Snow", description: "heavy snow" };
   if (code === 77) return { main: "Snow", description: "snow grains" };
-
   if (code === 80) return { main: "Rain", description: "slight rain showers" };
   if (code === 81)
     return { main: "Rain", description: "moderate rain showers" };
   if (code === 82) return { main: "Rain", description: "violent rain showers" };
-
   if (code === 85) return { main: "Snow", description: "slight snow showers" };
   if (code === 86) return { main: "Snow", description: "heavy snow showers" };
-
   if (code === 95) return { main: "Thunderstorm", description: "thunderstorm" };
   if (code === 96)
     return {
@@ -81,54 +76,56 @@ function mapOpenMeteoWeatherCode(code: number): {
       main: "Thunderstorm",
       description: "thunderstorm with heavy hail",
     };
-
   return { main: "Unknown", description: "unknown conditions" };
 }
 
+// -------------------
+// Fetch forecast data
+// -------------------
 async function getForecast(
   zip: string,
   apiKey?: string
 ): Promise<ForecastResult | null> {
   if (apiKey) {
-    const geoResponse = await fetch(
-      `https://api.openweathermap.org/geo/1.0/zip?zip=${zip},US&appid=${apiKey}`,
-      { next: { revalidate: 3600 } }
-    );
+    try {
+      // OpenWeatherMap geocoding
+      const geoRes = await fetch(
+        `https://api.openweathermap.org/geo/1.0/zip?zip=${zip},US&appid=${apiKey}`,
+        { next: { revalidate: 3600 } }
+      );
+      if (!geoRes.ok) return null;
 
-    if (!geoResponse.ok) return null;
+      const { lat, lon, name } = (await geoRes.json()) as {
+        lat: number;
+        lon: number;
+        name: string;
+      };
 
-    const { lat, lon, name } = (await geoResponse.json()) as {
-      lat: number;
-      lon: number;
-      name: string;
-    };
+      // OpenWeatherMap 5-day forecast
+      const forecastRes = await fetch(
+        `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`,
+        { next: { revalidate: 600 } }
+      );
+      if (!forecastRes.ok) return null;
 
-    const forecastResponse = await fetch(
-      `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`,
-      { next: { revalidate: 600 } }
-    );
+      const forecastData = (await forecastRes.json()) as WeatherData;
 
-    if (!forecastResponse.ok) {
-      throw new Error("Failed to fetch forecast");
+      return {
+        cityName: name,
+        list: forecastData.list,
+        dataSource: "openweather",
+      };
+    } catch {
+      // fallback to free services if OpenWeather fails
     }
-
-    const forecastData = (await forecastResponse.json()) as WeatherData;
-
-    return {
-      cityName: name,
-      list: forecastData.list,
-      dataSource: "openweather",
-    };
   }
 
-  // No API key configured: fall back to free services so the app remains usable.
-  const zipResponse = await fetch(`https://api.zippopotam.us/us/${zip}`, {
+  // Fallback: Zippopotam + Open-Meteo
+  const zipRes = await fetch(`https://api.zippopotam.us/us/${zip}`, {
     next: { revalidate: 3600 },
   });
-
-  if (!zipResponse.ok) return null;
-
-  const zipData = (await zipResponse.json()) as {
+  if (!zipRes.ok) return null;
+  const zipData = (await zipRes.json()) as {
     places: Array<{
       latitude: string;
       longitude: string;
@@ -136,25 +133,20 @@ async function getForecast(
       state: string;
     }>;
   };
-
   const place = zipData.places?.[0];
   if (!place) return null;
 
-  const latitude = Number(place.latitude);
-  const longitude = Number(place.longitude);
+  const lat = Number(place.latitude);
+  const lon = Number(place.longitude);
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
 
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
-
-  const meteoResponse = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&windspeed_unit=mph&forecast_days=5&timezone=auto`,
+  const meteoRes = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&windspeed_unit=mph&forecast_days=5&timezone=auto`,
     { next: { revalidate: 600 } }
   );
+  if (!meteoRes.ok) return null;
 
-  if (!meteoResponse.ok) {
-    throw new Error("Failed to fetch forecast");
-  }
-
-  const meteoData = (await meteoResponse.json()) as {
+  const meteoData = (await meteoRes.json()) as {
     hourly: {
       time: string[];
       temperature_2m: number[];
@@ -165,8 +157,7 @@ async function getForecast(
     };
   };
 
-  const times = meteoData.hourly?.time ?? [];
-
+  const times = meteoData.hourly.time ?? [];
   const nowMs = Date.now();
   const firstFutureIndex = Math.max(
     0,
@@ -175,11 +166,9 @@ async function getForecast(
 
   const list: WeatherData["list"] = [];
 
-  // 5 days * (24 / 3) = 40 items
   for (let i = firstFutureIndex; i < times.length && list.length < 40; i += 3) {
     const dt = new Date(times[i]);
     const condition = mapOpenMeteoWeatherCode(meteoData.hourly.weather_code[i]);
-
     list.push({
       dt: Math.floor(dt.getTime() / 1000),
       dt_txt: times[i],
@@ -202,30 +191,26 @@ async function getForecast(
   };
 }
 
+// -------------------
+// Page component
+// -------------------
 export default async function WeatherPage({
   params,
 }: {
   params: Promise<{ zip: string }>;
 }) {
   const { zip } = await params;
-
-  if (!/^\d{5}$/.test(zip)) {
-    notFound();
-  }
+  if (!/^\d{5}$/.test(zip)) notFound();
 
   const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
-
   let forecast: ForecastResult | null = null;
-
   try {
     forecast = await getForecast(zip, API_KEY);
   } catch {
     notFound();
   }
 
-  if (!forecast) {
-    return <InvalidZipState zip={zip} />;
-  }
+  if (!forecast) return <InvalidZipState zip={zip} />;
 
   return (
     <main className="min-h-screen bg-gray-50 py-8">
@@ -237,11 +222,9 @@ export default async function WeatherPage({
           >
             ← Back to search
           </Link>
-
           <h1 className="text-4xl font-bold mt-4 text-gray-800">
             {forecast.cityName}
           </h1>
-
           <p className="text-gray-600">ZIP Code: {zip}</p>
 
           {forecast.dataSource === "open-meteo" && (
@@ -263,28 +246,24 @@ export default async function WeatherPage({
               className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow"
             >
               <p className="font-semibold text-lg text-gray-800">
-                {new Date(item.dt * 1000).toLocaleDateString("en-US", {
+                {new Date(item.dt * 1000).toLocaleDateString(undefined, {
                   weekday: "short",
                   month: "short",
                   day: "numeric",
                 })}
               </p>
-
               <p className="text-sm text-gray-600 mb-3">
-                {new Date(item.dt * 1000).toLocaleTimeString("en-US", {
+                {new Date(item.dt * 1000).toLocaleTimeString(undefined, {
                   hour: "numeric",
                   minute: "2-digit",
                 })}
               </p>
-
               <p className="text-4xl font-bold my-2 text-blue-600">
                 {Math.round(item.main.temp)}°F
               </p>
-
               <p className="text-gray-700 capitalize font-medium">
                 {item.weather[0].description}
               </p>
-
               <div className="mt-4 pt-4 border-t border-gray-200 space-y-1 text-sm text-gray-600">
                 <p>Feels like: {Math.round(item.main.feels_like)}°F</p>
                 <p>Humidity: {item.main.humidity}%</p>
