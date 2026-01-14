@@ -1,27 +1,20 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import InvalidZipState from "../invalid-zip-state";
+import ForecastList from "./ForecastList"; // use client component for display
 
 interface WeatherData {
   list: Array<{
     dt: number;
-    dt_txt: string;
     main: {
       temp: number;
       feels_like: number;
       humidity: number;
     };
-    weather: Array<{
-      description: string;
-      main: string;
-    }>;
-    wind: {
-      speed: number;
-    };
+    weather: Array<{ description: string }>;
+    wind: { speed: number };
   }>;
-  city: {
-    name: string;
-  };
+  city: { name: string };
 }
 
 type ForecastResult = {
@@ -54,10 +47,7 @@ async function getForecast(
 
     const forecastData = (await forecastResponse.json()) as WeatherData;
 
-    return {
-      cityName: name,
-      list: forecastData.list,
-    };
+    return { cityName: name, list: forecastData.list };
   } catch {
     return null;
   }
@@ -69,7 +59,6 @@ export default async function WeatherPage({
   params: Promise<{ zip: string }>;
 }) {
   const { zip } = await params;
-
   if (!/^\d{5}$/.test(zip)) notFound();
 
   const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
@@ -97,39 +86,8 @@ export default async function WeatherPage({
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {forecast.list.map((item) => (
-            <div
-              key={item.dt}
-              className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow"
-            >
-              <p className="font-semibold text-lg text-gray-800">
-                {new Date(item.dt * 1000).toLocaleDateString(undefined, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </p>
-              <p className="text-sm text-gray-600 mb-3">
-                {new Date(item.dt * 1000).toLocaleTimeString(undefined, {
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-              </p>
-              <p className="text-4xl font-bold my-2 text-blue-600">
-                {Math.round(item.main.temp)}°F
-              </p>
-              <p className="text-gray-700 capitalize font-medium">
-                {item.weather[0].description}
-              </p>
-              <div className="mt-4 pt-4 border-t border-gray-200 space-y-1 text-sm text-gray-600">
-                <p>Feels like: {Math.round(item.main.feels_like)}°F</p>
-                <p>Humidity: {item.main.humidity}%</p>
-                <p>Wind: {Math.round(item.wind.speed)} mph</p>
-              </div>
-            </div>
-          ))}
-        </div>
+        {/* Client-rendered component formats the time in user's local timezone */}
+        <ForecastList items={forecast.list} />
       </div>
     </main>
   );

@@ -1,10 +1,8 @@
+"use client";
+
 interface ForecastItem {
   dt: number;
-  main: {
-    temp: number;
-    feels_like: number;
-    humidity: number;
-  };
+  main: { temp: number; feels_like: number; humidity: number };
   weather: Array<{ description: string }>;
   wind: { speed: number };
 }
