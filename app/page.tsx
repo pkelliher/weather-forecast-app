@@ -34,7 +34,7 @@ export default function Home() {
             type="text"
             value={zip}
             onChange={(e) => setZip(e.target.value.replace(/\D/g, ""))}
-            placeholder="Enter ZIP code (e.g., 94102)"
+            placeholder="Enter ZIP code (e.g., 94117)"
             maxLength={5}
             aria-describedby="zip-error"
             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800"

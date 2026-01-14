@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import InvalidZipState from "../invalid-zip-state";
-import ForecastList from "./ForecastList"; // use client component for display
+import ForecastList from "./ForecastList";
 
 interface WeatherData {
   list: Array<{
@@ -85,8 +85,6 @@ export default async function WeatherPage({
             🌤 Your 5-Day Weather Forecast 🌦 (3-hour intervals)
           </p>
         </div>
-
-        {/* Client-rendered component formats the time in user's local timezone */}
         <ForecastList items={forecast.list} />
       </div>
     </main>
