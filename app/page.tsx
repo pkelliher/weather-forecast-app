@@ -13,8 +13,9 @@ export default function Home() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (zip.length === 5) {
-      router.push(`/weather/${zip}`);
+    const trimmedZip = zip.trim();
+    if (trimmedZip.length === 5) {
+      router.push(`/weather/${trimmedZip}`);
     }
   };
 
