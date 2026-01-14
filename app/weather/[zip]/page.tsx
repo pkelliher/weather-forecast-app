@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-
 import InvalidZipState from "../invalid-zip-state";
 
 interface WeatherData {
@@ -31,13 +30,7 @@ type ForecastResult = {
   dataSource: "openweather" | "open-meteo";
 };
 
-// -------------------
-// Map Open-Meteo weather codes
-// -------------------
-function mapOpenMeteoWeatherCode(code: number): {
-  main: string;
-  description: string;
-} {
+function mapOpenMeteoWeatherCode(code: number) {
   if (code === 0) return { main: "Clear", description: "clear sky" };
   if (code === 1) return { main: "Clouds", description: "mainly clear" };
   if (code === 2) return { main: "Clouds", description: "partly cloudy" };
@@ -79,53 +72,41 @@ function mapOpenMeteoWeatherCode(code: number): {
   return { main: "Unknown", description: "unknown conditions" };
 }
 
-// -------------------
-// Fetch forecast data
-// -------------------
 async function getForecast(
   zip: string,
   apiKey?: string
 ): Promise<ForecastResult | null> {
   if (apiKey) {
     try {
-      // OpenWeatherMap geocoding
-      const geoRes = await fetch(
+      const geoResponse = await fetch(
         `https://api.openweathermap.org/geo/1.0/zip?zip=${zip},US&appid=${apiKey}`,
         { next: { revalidate: 3600 } }
       );
-      if (!geoRes.ok) return null;
-
-      const { lat, lon, name } = (await geoRes.json()) as {
+      if (!geoResponse.ok) return null;
+      const { lat, lon, name } = (await geoResponse.json()) as {
         lat: number;
         lon: number;
         name: string;
       };
-
-      // OpenWeatherMap 5-day forecast
-      const forecastRes = await fetch(
+      const forecastResponse = await fetch(
         `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=imperial&appid=${apiKey}`,
         { next: { revalidate: 600 } }
       );
-      if (!forecastRes.ok) return null;
-
-      const forecastData = (await forecastRes.json()) as WeatherData;
-
+      if (!forecastResponse.ok) return null;
+      const forecastData = (await forecastResponse.json()) as WeatherData;
       return {
         cityName: name,
         list: forecastData.list,
         dataSource: "openweather",
       };
-    } catch {
-      // fallback to free services if OpenWeather fails
-    }
+    } catch {}
   }
 
-  // Fallback: Zippopotam + Open-Meteo
-  const zipRes = await fetch(`https://api.zippopotam.us/us/${zip}`, {
+  const zipResponse = await fetch(`https://api.zippopotam.us/us/${zip}`, {
     next: { revalidate: 3600 },
   });
-  if (!zipRes.ok) return null;
-  const zipData = (await zipRes.json()) as {
+  if (!zipResponse.ok) return null;
+  const zipData = (await zipResponse.json()) as {
     places: Array<{
       latitude: string;
       longitude: string;
@@ -135,18 +116,16 @@ async function getForecast(
   };
   const place = zipData.places?.[0];
   if (!place) return null;
+  const latitude = Number(place.latitude);
+  const longitude = Number(place.longitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
 
-  const lat = Number(place.latitude);
-  const lon = Number(place.longitude);
-  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-
-  const meteoRes = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&windspeed_unit=mph&forecast_days=5&timezone=auto`,
+  const meteoResponse = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,weather_code&temperature_unit=fahrenheit&windspeed_unit=mph&forecast_days=5&timezone=auto`,
     { next: { revalidate: 600 } }
   );
-  if (!meteoRes.ok) return null;
-
-  const meteoData = (await meteoRes.json()) as {
+  if (!meteoResponse.ok) return null;
+  const meteoData = (await meteoResponse.json()) as {
     hourly: {
       time: string[];
       temperature_2m: number[];
@@ -157,7 +136,7 @@ async function getForecast(
     };
   };
 
-  const times = meteoData.hourly.time ?? [];
+  const times = meteoData.hourly?.time ?? [];
   const nowMs = Date.now();
   const firstFutureIndex = Math.max(
     0,
@@ -165,7 +144,6 @@ async function getForecast(
   );
 
   const list: WeatherData["list"] = [];
-
   for (let i = firstFutureIndex; i < times.length && list.length < 40; i += 3) {
     const dt = new Date(times[i]);
     const condition = mapOpenMeteoWeatherCode(meteoData.hourly.weather_code[i]);
@@ -178,9 +156,7 @@ async function getForecast(
         humidity: meteoData.hourly.relative_humidity_2m[i],
       },
       weather: [condition],
-      wind: {
-        speed: meteoData.hourly.wind_speed_10m[i],
-      },
+      wind: { speed: meteoData.hourly.wind_speed_10m[i] },
     });
   }
 
@@ -191,9 +167,6 @@ async function getForecast(
   };
 }
 
-// -------------------
-// Page component
-// -------------------
 export default async function WeatherPage({
   params,
 }: {
@@ -201,7 +174,6 @@ export default async function WeatherPage({
 }) {
   const { zip } = await params;
   if (!/^\d{5}$/.test(zip)) notFound();
-
   const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
   let forecast: ForecastResult | null = null;
   try {
@@ -209,7 +181,6 @@ export default async function WeatherPage({
   } catch {
     notFound();
   }
-
   if (!forecast) return <InvalidZipState zip={zip} />;
 
   return (
@@ -226,14 +197,12 @@ export default async function WeatherPage({
             {forecast.cityName}
           </h1>
           <p className="text-gray-600">ZIP Code: {zip}</p>
-
           {forecast.dataSource === "open-meteo" && (
             <p className="text-sm text-gray-500 mt-2">
               Showing forecast using a free data source. To use OpenWeather, set
               NEXT_PUBLIC_OPENWEATHER_API_KEY.
             </p>
           )}
-
           <p className="text-sm text-gray-500 mt-2">
             🌤 Your 5-Day Weather Forecast 🌦 (3-hour intervals)
           </p>
@@ -246,14 +215,14 @@ export default async function WeatherPage({
               className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow"
             >
               <p className="font-semibold text-lg text-gray-800">
-                {new Date(item.dt * 1000).toLocaleDateString(undefined, {
+                {new Date(item.dt * 1000).toLocaleDateString("en-US", {
                   weekday: "short",
                   month: "short",
                   day: "numeric",
                 })}
               </p>
               <p className="text-sm text-gray-600 mb-3">
-                {new Date(item.dt * 1000).toLocaleTimeString(undefined, {
+                {new Date(item.dt * 1000).toLocaleTimeString("en-US", {
                   hour: "numeric",
                   minute: "2-digit",
                 })}
