@@ -92,7 +92,8 @@ PASS  __tests__/InvalidZipState.test.tsx
 PASS  __tests__/Home.test.tsx
 ```
 
-## Test Files
+### Test Files
+
 - `__tests__/Home.test.tsx` – Tests the home page ZIP input form.
 - `__tests__/InvalidZipState.test.tsx` – Tests the invalid ZIP error state component.
 
@@ -111,4 +112,4 @@ Example: `/weather/94102` (San Francisco)
 
 ## License
 
-MIT# test commit
+MIT
