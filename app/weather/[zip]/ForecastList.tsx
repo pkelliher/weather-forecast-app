@@ -1,7 +1,3 @@
-"use client";
-
-import React from "react";
-
 interface ForecastItem {
   dt: number;
   main: {
@@ -26,14 +22,14 @@ export default function ForecastList({ items }: ForecastListProps) {
           className="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow"
         >
           <p className="font-semibold text-lg text-gray-800">
-            {new Date(item.dt * 1000).toLocaleDateString("en-US", {
+            {new Date(item.dt * 1000).toLocaleDateString(undefined, {
               weekday: "short",
               month: "short",
               day: "numeric",
             })}
           </p>
           <p className="text-sm text-gray-600 mb-3">
-            {new Date(item.dt * 1000).toLocaleTimeString("en-US", {
+            {new Date(item.dt * 1000).toLocaleTimeString(undefined, {
               hour: "numeric",
               minute: "2-digit",
             })}
