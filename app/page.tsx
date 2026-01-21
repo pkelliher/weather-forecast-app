@@ -20,7 +20,7 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+    <main className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-900 to-black">
       <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full">
         <h1 className="text-3xl font-bold mb-4 text-center text-gray-800">
           5-Day Weather Forecast
